@@ -1,0 +1,2 @@
+rootProject.name='kids_control_app'
+include ':app'
