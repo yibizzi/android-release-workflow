@@ -38,6 +38,8 @@ jobs:
       - name: Assemble Debug APK
         run: ./gradlew assembleDebug
 
-      # Step 4: Assemble debug test apk
-      - name: Assemble Debug Test APK
-        run: ./gradlew assembleAndroidTest
+      - name: Upload APK
+        uses: actions/upload-artifact@v1
+        with:
+          name: apk
+          path: app/build/outputs/apk/debug/app-debug.apk
