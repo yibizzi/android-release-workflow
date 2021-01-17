@@ -1,0 +1,54 @@
+
+name: build_release
+# Step 1: Choose the branch or branches you want to run this workflow
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+
+
+jobs:
+  testing:
+    name: Running tests and generating release apk
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone Repo
+        uses: actions/checkout@v1
+
+      #check if pull request is labeled
+      - id: bump
+        uses: zwaldowski/match-label-action@v2
+        with:
+          allowed: major,minor,patch
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+
+      - name: list all gradle tasks
+        run: ./gradlew tasks
+
+      # Step 3: Check the code with Android linter
+      - name: Run Android Linter
+        run: ./gradlew lintDebug
+
+      # Step 4: Yun your unit tests
+      - name: Run Unit Tests
+        run: ./gradlew testDebugUnitTest
+
+      # Step 5: Get keystore
+      - name: Get keystore file from a base64 string
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: echo $KEYSTORE_BASE64 | base64 --decode > keystore.jks
+
+      # Step 6: Assemble release apk
+      - name: Assemble Release APK
+        env:
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          ALIAS_PASSWORD: ${{ secrets.ALIAS_PASSWORD }}
+        run: ./gradlew assembleRelease
