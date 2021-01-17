@@ -10,7 +10,7 @@ on:
 
 jobs:
   testing:
-    name: Lint Check and Testing
+    name: Lint Check and Testing and generating release apk
 
     runs-on: ubuntu-latest
 
@@ -34,15 +34,19 @@ jobs:
       - name: Run Unit Tests
         run: ./gradlew testDebugUnitTest
 
-      # Step 4: Assemble debug apk
-      - name: Assemble Debug APK
-        run: ./gradlew assembleDebug
+      # Step 5: Get keystore
+      - name: Get keystore file from a base64 string
+        run: echo $KEYSTORE_BASE64 | base64 --decode > keystore.jks && ls
+
+      # Step 6: Assemble release apk
+      - name: Assemble Release APK
+        run: ./gradlew assembleRelease
 
       - name: Upload APK
         uses: actions/upload-artifact@v1
         with:
           name: apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: app/release/app-release.apk
 
   releasing:
     name: Building Release APK
@@ -54,14 +58,26 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: apk
+
+      - id: bump
+        uses: zwaldowski/match-label-action@v1
+        with:
+          allowed: major,minor,patch
+      - id: next_version
+        uses: zwaldowski/semver-release-action@v1
+        with:
+          bump: ${{ steps.bump.outputs.match }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{steps.next_version.outputs.version}}
+          release_name: Release ${{ steps.next_version.outputs.version }}
+
       - name: Upload Release APK
         id: upload_release_asset
         uses: actions/upload-release-asset@v1.0.1
@@ -69,6 +85,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: apk/app-debug.apk
+          asset_path: apk/app-release.apk
           asset_name: ProtectMyChild.apk
           asset_content_type: application/zip
