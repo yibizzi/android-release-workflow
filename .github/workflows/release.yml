@@ -38,6 +38,7 @@ jobs:
       - name: Get keystore file from a base64 string
         run: echo $KEYSTORE_BASE64 | base64 --decode > keystore.jks && realpath keystore.jks
 
+
       # Step 6: Assemble release apk
       - name: Assemble Release APK
         run: ls && ./gradlew assembleRelease
