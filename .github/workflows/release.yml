@@ -36,12 +36,14 @@ jobs:
 
       # Step 5: Get keystore
       - name: Get keystore file from a base64 string
-        run: echo $KEYSTORE_BASE64 | base64 --decode > keystore.jks && echo  $KEYSTORE_BASE64 && cat keystore.jks
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: echo $KEYSTORE_BASE64 | base64 --decode > keystore.jks
 
 
       # Step 6: Assemble release apk
       - name: Assemble Release APK
-        run: ls && ./gradlew assembleRelease
+        run: ./gradlew assembleRelease
 
       - name: Upload APK
         uses: actions/upload-artifact@v1
