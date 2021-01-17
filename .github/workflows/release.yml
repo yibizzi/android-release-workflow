@@ -66,11 +66,11 @@ jobs:
           name: apk
 
       - id: bump
-        uses: zwaldowski/match-label-action@v1
+        uses: zwaldowski/match-label-action@v2
         with:
           allowed: major,minor,patch
       - id: next_version
-        uses: zwaldowski/semver-release-action@v1
+        uses: zwaldowski/semver-release-action@v2
         with:
           bump: ${{ steps.bump.outputs.match }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
