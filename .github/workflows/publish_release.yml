@@ -2,13 +2,15 @@
 name: publish_release
 # Step 1: Choose the branch or branches you want to run this workflow
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
       - main
       - master
 
 jobs:
   building:
+    if: github.event.pull_request.merged == true
     name: Generating release apk
     runs-on: ubuntu-latest
 
@@ -32,7 +34,7 @@ jobs:
           ALIAS_PASSWORD: ${{ secrets.ALIAS_PASSWORD }}
         run: ./gradlew assembleRelease
 
-      - name: Upload APK
+      - name: Upload APK as an Artifact
         uses: actions/upload-artifact@v1
         with:
           name: apk
@@ -40,6 +42,7 @@ jobs:
 
   publishing:
     name: Publishing Release APK
+    if: github.event.pull_request.merged == true
     needs: building
     runs-on: ubuntu-latest
 
@@ -68,7 +71,7 @@ jobs:
           tag_name: ${{steps.next_version.outputs.version}}
           release_name: Release ${{ steps.next_version.outputs.version }}
 
-      - name: Upload Release APK
+      - name: Upload Release APK to repo releases
         id: upload_release_asset
         uses: actions/upload-release-asset@v1.0.1
         env:
